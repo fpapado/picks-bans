@@ -90,7 +90,7 @@ update msg model =
                             |> Maybe.withDefault bo3Mode
 
                     nextModeState =
-                        getNextPhase modeState.id currentMode
+                        getNextModeState modeState.id currentMode
                 in
                     ( { model
                         | currentModeState = nextModeState
@@ -109,8 +109,8 @@ changeMapStatus map_id phase mp =
             mp
 
 
-getNextPhase : Int -> Mode -> State
-getNextPhase currentState currentMode =
+getNextModeState : Int -> Mode -> State
+getNextModeState currentState currentMode =
     let
         nextState =
             currentState + 1
