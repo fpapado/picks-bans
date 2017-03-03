@@ -12,9 +12,7 @@ import Task
 
 type alias Model =
     { maps : List Map
-    , currentState : Int
-    , currentPhase : Phase
-    , currentTeam : Int
+    , currentModeState : State
     , currentMode : Int
     , modes : List Mode
     , teams : List Team
@@ -32,8 +30,8 @@ type alias Mode =
 
 type alias State =
     { id : Int
-    , teamID : Int
     , phase : Phase
+    , teamID : Int
     }
 
 
@@ -72,31 +70,33 @@ type Msg
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg of
-        SetMapStatus map_id ->
-            ( { model
-                | maps = List.map (changeMapStatus map_id model.currentPhase) model.maps
-              }
-            , Task.perform identity (Task.succeed AdvancePhase)
-            )
-
-        AdvancePhase ->
-            let
-                currentMode =
-                    List.filter (\m -> m.id == model.currentMode) model.modes
-                        |> List.head
-                        |> Maybe.withDefault bo3Mode
-
-                ( next_phase, next_state, next_team ) =
-                    getNextPhase model.currentState currentMode
-            in
+    let
+        modeState =
+            model.currentModeState
+    in
+        case msg of
+            SetMapStatus map_id ->
                 ( { model
-                    | currentPhase = next_phase
-                    , currentState = next_state
-                    , currentTeam = next_team
+                    | maps = List.map (changeMapStatus map_id modeState.phase) model.maps
                   }
-                , Cmd.none
+                , Task.perform identity (Task.succeed AdvancePhase)
                 )
+
+            AdvancePhase ->
+                let
+                    currentMode =
+                        List.filter (\m -> m.id == model.currentMode) model.modes
+                            |> List.head
+                            |> Maybe.withDefault bo3Mode
+
+                    nextModeState =
+                        getNextPhase modeState.id currentMode
+                in
+                    ( { model
+                        | currentModeState = nextModeState
+                      }
+                    , Cmd.none
+                    )
 
 
 changeMapStatus : Int -> Phase -> Map -> Map
@@ -109,19 +109,19 @@ changeMapStatus map_id phase mp =
             mp
 
 
-getNextPhase : Int -> Mode -> ( Phase, Int, Int )
+getNextPhase : Int -> Mode -> State
 getNextPhase currentState currentMode =
     let
         nextState =
             currentState + 1
 
-        { id, teamID, phase } =
+        nextModeState =
             currentMode.states
                 |> List.filter (\s -> s.id == nextState)
                 |> List.head
                 |> Maybe.withDefault blankState
     in
-        ( phase, nextState, teamID )
+        nextModeState
 
 
 
@@ -131,14 +131,17 @@ getNextPhase currentState currentMode =
 view : Model -> Html Msg
 view model =
     let
+        modeState =
+            model.currentModeState
+
         currentTeam =
-            List.filter (\t -> t.id == model.currentTeam) model.teams
+            List.filter (\t -> t.id == modeState.teamID) model.teams
                 |> List.head
                 |> Maybe.withDefault { name = "", id = -1 }
     in
         div [ class "mw8-ns pa3 center" ]
             [ h1 [ class "f2 f1-ns tc sans-serif navy" ] [ text "Picks and Bans" ]
-            , phaseView currentTeam model.currentPhase
+            , phaseView currentTeam modeState.phase
             , div [ class "flex flex-wrap" ]
                 (List.map mapView model.maps)
             ]
@@ -246,7 +249,15 @@ blankState =
 
 initModel : Model
 initModel =
-    { maps = initMaps, teams = initTeams, currentState = 0, currentPhase = Pick, currentTeam = 0, currentMode = 0, modes = [ bo3Mode, bo1Mode ] }
+    { maps = initMaps, teams = initTeams, currentModeState = initModeState, currentMode = 0, modes = [ bo3Mode, bo1Mode ] }
+
+
+initModeState : State
+initModeState =
+    { id = 0
+    , phase = Pick
+    , teamID = 0
+    }
 
 
 initTeams : List Team
