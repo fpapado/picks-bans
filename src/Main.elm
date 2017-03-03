@@ -12,7 +12,7 @@ import Task
 
 type alias Model =
     { maps : List Map
-    , currentModeState : State
+    , currentModeState : Maybe State
     , currentMode : Int
     , modes : List Mode
     , teams : List Team
@@ -57,6 +57,7 @@ type alias Team =
 type Phase
     = Pick
     | Ban
+    | Rand
 
 
 
@@ -77,7 +78,7 @@ update msg model =
         case msg of
             SetMapStatus map_id ->
                 ( { model
-                    | maps = List.map (changeMapStatus map_id modeState.phase) model.maps
+                    | maps = List.map (changeMapStatus map_id modeState) model.maps
                   }
                 , Task.perform identity (Task.succeed AdvancePhase)
                 )
@@ -90,7 +91,7 @@ update msg model =
                             |> Maybe.withDefault bo3Mode
 
                     nextModeState =
-                        getNextModeState modeState.id currentMode
+                        getNextModeState modeState currentMode
                 in
                     ( { model
                         | currentModeState = nextModeState
@@ -99,29 +100,38 @@ update msg model =
                     )
 
 
-changeMapStatus : Int -> Phase -> Map -> Map
-changeMapStatus map_id phase mp =
-    case mp.id == map_id of
-        True ->
-            { mp | status = Just phase }
+changeMapStatus : Int -> Maybe State -> Map -> Map
+changeMapStatus map_id maybeState mp =
+    case maybeState of
+        Just state ->
+            case mp.id == map_id of
+                True ->
+                    { mp | status = Just state.phase }
 
-        False ->
+                False ->
+                    mp
+
+        Nothing ->
             mp
 
 
-getNextModeState : Int -> Mode -> State
-getNextModeState currentState currentMode =
-    let
-        nextState =
-            currentState + 1
+getNextModeState : Maybe State -> Mode -> Maybe State
+getNextModeState maybeState currentMode =
+    case maybeState of
+        Just state ->
+            let
+                nextState =
+                    state.id + 1
 
-        nextModeState =
-            currentMode.states
-                |> List.filter (\s -> s.id == nextState)
-                |> List.head
-                |> Maybe.withDefault blankState
-    in
-        nextModeState
+                nextModeState =
+                    currentMode.states
+                        |> List.filter (\s -> s.id == nextState)
+                        |> List.head
+            in
+                nextModeState
+
+        Nothing ->
+            Nothing
 
 
 
@@ -135,33 +145,49 @@ view model =
             model.currentModeState
 
         currentTeam =
-            List.filter (\t -> t.id == modeState.teamID) model.teams
-                |> List.head
-                |> Maybe.withDefault { name = "", id = -1 }
+            case modeState of
+                Nothing ->
+                    { name = "", id = -1 }
+
+                Just modeS ->
+                    List.filter (\t -> t.id == modeS.teamID) model.teams
+                        |> List.head
+                        |> Maybe.withDefault { name = "", id = -1 }
     in
         div [ class "mw8-ns pa3 center" ]
             [ h1 [ class "f2 f1-ns tc sans-serif navy" ] [ text "Picks and Bans" ]
-            , phaseView currentTeam modeState.phase
+            , stateView currentTeam modeState
             , div [ class "flex flex-wrap" ]
                 (List.map mapView model.maps)
             ]
 
 
-phaseView : Team -> Phase -> Html Msg
-phaseView team phase =
-    let
-        teamText =
-            team.name
+stateView : Team -> Maybe State -> Html Msg
+stateView team maybeState =
+    case maybeState of
+        Just state ->
+            let
+                phase =
+                    state.phase
 
-        phaseText =
-            case phase of
-                Pick ->
-                    "is picking"
+                teamText =
+                    team.name
 
-                Ban ->
-                    "is banning"
-    in
-        h2 [ class "f3 f2-ns tc sans-serif" ] [ text <| teamText ++ " " ++ phaseText ]
+                phaseText =
+                    case phase of
+                        Pick ->
+                            "is picking"
+
+                        Ban ->
+                            "is banning"
+
+                        Rand ->
+                            "Final map selected randomly"
+            in
+                h2 [ class "f3 f2-ns tc sans-serif" ] [ text <| teamText ++ " " ++ phaseText ]
+
+        Nothing ->
+            h2 [ class "f3 f2-ns tc sans-serif" ] [ text "Selection complete" ]
 
 
 mapView : Map -> Html Msg
@@ -187,6 +213,9 @@ statusView status =
 
                 Just Ban ->
                     "✘"
+
+                Just Rand ->
+                    "R"
 
                 Nothing ->
                     ""
@@ -230,6 +259,7 @@ bo3States =
     , { id = 1, teamID = 1, phase = Ban }
     , { id = 2, teamID = 1, phase = Pick }
     , { id = 3, teamID = 0, phase = Pick }
+    , { id = 4, teamID = -1, phase = Rand }
     ]
 
 
@@ -239,17 +269,13 @@ bo1States =
     , { id = 1, teamID = 1, phase = Ban }
     , { id = 2, teamID = 1, phase = Ban }
     , { id = 3, teamID = 0, phase = Ban }
+    , { id = 4, teamID = -1, phase = Rand }
     ]
-
-
-blankState : State
-blankState =
-    { id = 0, teamID = 0, phase = Pick }
 
 
 initModel : Model
 initModel =
-    { maps = initMaps, teams = initTeams, currentModeState = initModeState, currentMode = 0, modes = [ bo3Mode, bo1Mode ] }
+    { maps = initMaps, teams = initTeams, currentModeState = Just initModeState, currentMode = 0, modes = [ bo3Mode, bo1Mode ] }
 
 
 initModeState : State
