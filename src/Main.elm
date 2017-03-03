@@ -12,16 +12,34 @@ import Task
 
 type alias Model =
     { maps : List Map
+    , currentState : Int
     , currentPhase : Phase
     , currentTeam : Int
+    , currentMode : Int
+    , modes : List Mode
     , teams : List Team
-    , mode : Mode
     }
 
 
-type Mode
+type alias Mode =
+    { id : Int
+    , mtype : ModeType
+    , title : String
+    , states : List State
+    , currentState : Int
+    }
+
+
+type alias State =
+    { id : Int
+    , teamID : Int
+    , phase : Phase
+    }
+
+
+type ModeType
     = Bo3
-    | Bo5
+    | Bo1
 
 
 type alias Map =
@@ -64,11 +82,17 @@ update msg model =
 
         AdvancePhase ->
             let
-                ( next_phase, next_team ) =
-                    getNextPhase model.currentPhase model.currentTeam
+                currentMode =
+                    List.filter (\m -> m.id == model.currentMode) model.modes
+                        |> List.head
+                        |> Maybe.withDefault bo3Mode
+
+                ( next_phase, next_state, next_team ) =
+                    getNextPhase model.currentState currentMode
             in
                 ( { model
                     | currentPhase = next_phase
+                    , currentState = next_state
                     , currentTeam = next_team
                   }
                 , Cmd.none
@@ -85,9 +109,19 @@ changeMapStatus map_id phase mp =
             mp
 
 
-getNextPhase : Phase -> Int -> ( Phase, Int )
-getNextPhase phase team =
-    ( Pick, 1 )
+getNextPhase : Int -> Mode -> ( Phase, Int, Int )
+getNextPhase currentState currentMode =
+    let
+        nextState =
+            currentState + 1
+
+        { id, teamID, phase } =
+            currentMode.states
+                |> List.filter (\s -> s.id == nextState)
+                |> List.head
+                |> Maybe.withDefault blankState
+    in
+        ( phase, nextState, teamID )
 
 
 
@@ -177,9 +211,42 @@ init =
     ( initModel, Cmd.none )
 
 
+bo3Mode : Mode
+bo3Mode =
+    { id = 0, mtype = Bo3, title = "Best of 3", states = bo3States, currentState = 0 }
+
+
+bo1Mode : Mode
+bo1Mode =
+    { id = 0, mtype = Bo1, title = "Best of 5", states = bo1States, currentState = 0 }
+
+
+bo3States : List State
+bo3States =
+    [ { id = 0, teamID = 0, phase = Ban }
+    , { id = 1, teamID = 1, phase = Ban }
+    , { id = 2, teamID = 1, phase = Pick }
+    , { id = 3, teamID = 0, phase = Pick }
+    ]
+
+
+bo1States : List State
+bo1States =
+    [ { id = 0, teamID = 0, phase = Ban }
+    , { id = 1, teamID = 1, phase = Ban }
+    , { id = 2, teamID = 1, phase = Ban }
+    , { id = 3, teamID = 0, phase = Ban }
+    ]
+
+
+blankState : State
+blankState =
+    { id = 0, teamID = 0, phase = Pick }
+
+
 initModel : Model
 initModel =
-    { maps = initMaps, teams = initTeams, currentPhase = Pick, currentTeam = 0, mode = Bo3 }
+    { maps = initMaps, teams = initTeams, currentState = 0, currentPhase = Pick, currentTeam = 0, currentMode = 0, modes = [ bo3Mode, bo1Mode ] }
 
 
 initTeams : List Team
