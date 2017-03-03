@@ -3,7 +3,7 @@ module Main exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (class, href, placeholder, rel, src, style)
 import Html.Events exposing (..)
-import Task exposing (andThen)
+import Task
 
 
 -- Model
@@ -59,7 +59,7 @@ update msg model =
             ( { model
                 | maps = List.map (changeMapStatus map_id model.currentPhase) model.maps
               }
-            , Cmd.none
+            , Task.perform identity (Task.succeed AdvancePhase)
             )
 
         AdvancePhase ->
@@ -131,7 +131,12 @@ mapView : Map -> Html Msg
 mapView map =
     div [ class "ph2 mb3", style [ ( "flex", "0 0 33%" ) ] ]
         [ statusView map.status
-        , img [ src map.imgurl, class "w-100" ] []
+        , img
+            [ src map.imgurl
+            , class "w-100"
+            , onClick <| SetMapStatus map.id
+            ]
+            []
         ]
 
 
@@ -180,18 +185,18 @@ initModel =
 initTeams : List Team
 initTeams =
     [ { id = 0, name = "Team 1" }
-    , { id = 0, name = "Team 1" }
+    , { id = 1, name = "Team 2" }
     ]
 
 
 initMaps : List Map
 initMaps =
     [ { id = 0, imgurl = "images/Cache.jpg", title = "Cache", status = Nothing }
-    , { id = 1, imgurl = "images/Cobblestone.jpg", title = "Cobblestone", status = Just Pick }
+    , { id = 1, imgurl = "images/Cobblestone.jpg", title = "Cobblestone", status = Nothing }
     , { id = 2, imgurl = "images/Dust2.jpg", title = "Dust 2", status = Nothing }
     , { id = 3, imgurl = "images/Inferno.jpg", title = "Inferno", status = Nothing }
     , { id = 4, imgurl = "images/Mirage.jpg", title = "Mirage", status = Nothing }
-    , { id = 5, imgurl = "images/Overpass.jpg", title = "Overpass", status = Just Ban }
+    , { id = 5, imgurl = "images/Overpass.jpg", title = "Overpass", status = Nothing }
     , { id = 6, imgurl = "images/Train.jpg", title = "Train", status = Nothing }
     ]
 
