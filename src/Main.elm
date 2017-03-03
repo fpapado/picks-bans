@@ -13,7 +13,8 @@ import Task exposing (andThen)
 type alias Model =
     { maps : List Map
     , currentPhase : Phase
-    , currentTeam : Team
+    , currentTeam : Int
+    , teams : List Team
     , mode : Mode
     }
 
@@ -31,9 +32,10 @@ type alias Map =
     }
 
 
-type Team
-    = Team1
-    | Team2
+type alias Team =
+    { id : Int
+    , name : String
+    }
 
 
 type Phase
@@ -83,9 +85,9 @@ changeMapStatus map_id phase mp =
             mp
 
 
-getNextPhase : Phase -> Team -> ( Phase, Team )
+getNextPhase : Phase -> Int -> ( Phase, Int )
 getNextPhase phase team =
-    ( Pick, Team1 )
+    ( Pick, 1 )
 
 
 
@@ -94,24 +96,25 @@ getNextPhase phase team =
 
 view : Model -> Html Msg
 view model =
-    div [ class "mw8-ns pa3 center" ]
-        [ h1 [ class "f2 f1-ns tc sans-serif navy" ] [ text "Picks and Bans" ]
-        , phaseView model.currentTeam model.currentPhase
-        , div [ class "flex flex-wrap" ]
-            (List.map mapView model.maps)
-        ]
+    let
+        currentTeam =
+            List.filter (\t -> t.id == model.currentTeam) model.teams
+                |> List.head
+                |> Maybe.withDefault { name = "", id = -1 }
+    in
+        div [ class "mw8-ns pa3 center" ]
+            [ h1 [ class "f2 f1-ns tc sans-serif navy" ] [ text "Picks and Bans" ]
+            , phaseView currentTeam model.currentPhase
+            , div [ class "flex flex-wrap" ]
+                (List.map mapView model.maps)
+            ]
 
 
 phaseView : Team -> Phase -> Html Msg
 phaseView team phase =
     let
         teamText =
-            case team of
-                Team1 ->
-                    "Team 1"
-
-                Team2 ->
-                    "Team 2"
+            team.name
 
         phaseText =
             case phase of
@@ -171,7 +174,14 @@ init =
 
 initModel : Model
 initModel =
-    { maps = initMaps, currentPhase = Pick, currentTeam = Team1, mode = Bo3 }
+    { maps = initMaps, teams = initTeams, currentPhase = Pick, currentTeam = 0, mode = Bo3 }
+
+
+initTeams : List Team
+initTeams =
+    [ { id = 0, name = "Team 1" }
+    , { id = 0, name = "Team 1" }
+    ]
 
 
 initMaps : List Map
