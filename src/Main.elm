@@ -7,13 +7,20 @@ import Task exposing (andThen)
 
 
 -- Model
+-- TODO: event name
 
 
 type alias Model =
     { maps : List Map
     , currentPhase : Phase
     , currentTeam : Team
+    , mode : Mode
     }
+
+
+type Mode
+    = Bo3
+    | Bo5
 
 
 type alias Map =
@@ -87,36 +94,61 @@ getNextPhase phase team =
 
 view : Model -> Html Msg
 view model =
-    div [ class "mw7-ns pa3 center" ]
+    div [ class "mw8-ns pa3 center" ]
         [ h1 [ class "f2 f1-ns tc sans-serif navy" ] [ text "Picks and Bans" ]
+        , phaseView model.currentTeam model.currentPhase
         , div [ class "flex flex-wrap" ]
             (List.map mapView model.maps)
         ]
 
 
+phaseView : Team -> Phase -> Html Msg
+phaseView team phase =
+    let
+        teamText =
+            case team of
+                Team1 ->
+                    "Team 1"
+
+                Team2 ->
+                    "Team 2"
+
+        phaseText =
+            case phase of
+                Pick ->
+                    "is picking"
+
+                Ban ->
+                    "is banning"
+    in
+        h2 [ class "f3 f2-ns tc sans-serif" ] [ text <| teamText ++ " " ++ phaseText ]
+
+
 mapView : Map -> Html Msg
 mapView map =
-    div [ class "ph2 mb3", style [ ( "flex", "0 0 25%" ) ] ]
-        [ img [ src map.imgurl, class "w-100" ] []
-        , statusView map.status
+    div [ class "ph2 mb3", style [ ( "flex", "0 0 33%" ) ] ]
+        [ statusView map.status
+        , img [ src map.imgurl, class "w-100" ] []
         ]
 
 
 statusView : Maybe Phase -> Html Msg
 statusView status =
     let
-        mapStateImgUrl =
+        mapStateMark =
             case status of
                 Just Pick ->
-                    "banned.png"
+                    "✔"
 
                 Just Ban ->
-                    "picked.png"
+                    "✘"
 
                 Nothing ->
                     ""
     in
-        img [ src mapStateImgUrl ] []
+        span [ class "absolute f1 red" ]
+            [ text mapStateMark
+            ]
 
 
 
@@ -139,7 +171,19 @@ init =
 
 initModel : Model
 initModel =
-    { maps = [], currentPhase = Pick, currentTeam = Team1 }
+    { maps = initMaps, currentPhase = Pick, currentTeam = Team1, mode = Bo3 }
+
+
+initMaps : List Map
+initMaps =
+    [ { id = 0, imgurl = "images/Cache.jpg", title = "Cache", status = Nothing }
+    , { id = 1, imgurl = "images/Cobblestone.jpg", title = "Cobblestone", status = Just Pick }
+    , { id = 2, imgurl = "images/Dust2.jpg", title = "Dust 2", status = Nothing }
+    , { id = 3, imgurl = "images/Inferno.jpg", title = "Inferno", status = Nothing }
+    , { id = 4, imgurl = "images/Mirage.jpg", title = "Mirage", status = Nothing }
+    , { id = 5, imgurl = "images/Overpass.jpg", title = "Overpass", status = Just Ban }
+    , { id = 6, imgurl = "images/Train.jpg", title = "Train", status = Nothing }
+    ]
 
 
 main : Program Never Model Msg

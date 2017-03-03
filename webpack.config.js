@@ -1,3 +1,6 @@
+var CopyWebpackPlugin = require('copy-webpack-plugin');
+var path = require('path');
+
 module.exports = {
   entry: './src/index.js',
 
@@ -30,5 +33,11 @@ module.exports = {
   devServer: {
     inline: true,
     stats: 'errors-only'
-  }
+  },
+
+  plugins: [
+    new CopyWebpackPlugin([
+        { from: 'images', to: 'images/' }
+    ])
+  ]
 };
