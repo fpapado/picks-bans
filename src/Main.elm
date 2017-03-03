@@ -159,6 +159,34 @@ view model =
             , stateView currentTeam modeState
             , div [ class "flex flex-wrap" ]
                 (List.map mapView model.maps)
+            , picksBansView model.maps
+            ]
+
+
+picksBansView : List Map -> Html Msg
+picksBansView maps =
+    let
+        picked =
+            List.filter (\m -> m.status == Just Pick || m.status == Just Rand) maps
+
+        banned =
+            List.filter (\m -> m.status == Just Ban) maps
+    in
+        div [ class "flex flex-wrap" ]
+            [ listView "Picked" picked "blue"
+            , listView "Banned" banned "red"
+            ]
+
+
+listView : String -> List Map -> String -> Html Msg
+listView title maps style_ =
+    let
+        cellView =
+            \m -> span [ class "db pa3 mb2 f5 b bg-near-white" ] [ text m.title ]
+    in
+        div [ class "ph2 mb3 mt3", style [ ( "flex", "0 0 50%" ) ] ]
+            [ h3 [ class <| "f3 tc " ++ style_ ] [ text title ]
+            , div [ class "" ] <| List.map cellView maps
             ]
 
 
@@ -281,7 +309,7 @@ initModel =
 initModeState : State
 initModeState =
     { id = 0
-    , phase = Pick
+    , phase = Ban
     , teamID = 0
     }
 
