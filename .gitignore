@@ -5,3 +5,4 @@ repl-temp-*
 # webpack output
 dist/
 node_modules/
+images/
