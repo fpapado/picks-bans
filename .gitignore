@@ -6,3 +6,4 @@ repl-temp-*
 dist/
 node_modules/
 images/
+elm.js
