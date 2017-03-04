@@ -3,6 +3,8 @@ module Main exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (class, href, placeholder, rel, src, style)
 import Html.Events exposing (..)
+import Svg
+import Svg.Attributes exposing (version, viewBox, width, height, fill, d)
 import Task
 
 
@@ -220,14 +222,19 @@ stateView team maybeState =
 
 mapView : Map -> Html Msg
 mapView map =
-    div [ class "ph2 mb3", style [ ( "flex", "0 0 33%" ) ] ]
-        [ statusView map.status
-        , img
-            [ src map.imgurl
-            , class "w-100"
-            , onClick <| SetMapStatus map.id
+    div
+        [ class "ph2 mb3"
+        , style [ ( "flex", "0 0 33%" ) ]
+        , onClick <| SetMapStatus map.id
+        ]
+        [ div [ class "relative" ]
+            [ statusView map.status
+            , img
+                [ src map.imgurl
+                , class "w-100"
+                ]
+                []
             ]
-            []
         ]
 
 
@@ -237,19 +244,49 @@ statusView status =
         mapStateMark =
             case status of
                 Just Pick ->
-                    "✔"
+                    Svg.svg
+                        [ version "1.1"
+                        , viewBox "0 0 32 32"
+                        , width "100%"
+                        , height "100%"
+                        , fill "#0fb800"
+                        ]
+                        [ Svg.path [ d "M1 14 L5 10 L13 18 L27 4 L31 8 L13 26 z" ]
+                            []
+                        ]
 
                 Just Ban ->
-                    "✘"
+                    Svg.svg
+                        [ version "1.1"
+                        , viewBox "0 0 32 32"
+                        , width "100%"
+                        , height "100%"
+                        , fill "#cc0011"
+                        ]
+                        [ Svg.path [ d "M16 0 A16 16 0 0 0 0 16 A16 16 0 0 0 16 32 A16 16 0 0 0 32 16 A16 16 0 0 0 16 0 M16 6 A10 10 0 0 1 20.675 7 L7 20.675 A10 10 0 0 1 6 16 A10 10 0 0 1 16 6 M26 16 A10 10 0 0 1 16 26 A10 10 0 0 1 11.325 25 L25 11.325 A10 10 0 0 1 26 16" ]
+                            []
+                        ]
 
                 Just Rand ->
-                    "R"
+                    Svg.svg
+                        [ version "1.1"
+                        , viewBox "0 0 32 32"
+                        , width "100%"
+                        , height "100%"
+                        , fill "#006bb7"
+                        ]
+                        [ Svg.path [ d "M1 14 L5 10 L13 18 L27 4 L31 8 L13 26 z" ]
+                            []
+                        ]
 
                 Nothing ->
-                    ""
+                    Svg.svg [] []
     in
-        span [ class "absolute f1 red" ]
-            [ text mapStateMark
+        div [ class "absolute w-100 h-100" ]
+            [ div
+                [ class "pa3 w-100 h-100"
+                ]
+                [ mapStateMark ]
             ]
 
 
