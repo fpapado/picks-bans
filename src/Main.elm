@@ -3,6 +3,8 @@ module Main exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (class, href, placeholder, rel, src, style)
 import Html.Events exposing (..)
+import Random
+import Random.Extra exposing (sample)
 import Svg
 import Svg.Attributes exposing (version, viewBox, width, height, fill, d)
 import Task
@@ -69,6 +71,7 @@ type Phase
 type Msg
     = SetMapStatus Int
     | AdvancePhase
+    | SetRandom
     | NoOp
 
 
@@ -105,6 +108,18 @@ update msg model =
                     , nextCmd
                     )
 
+            SetRandom ->
+                let
+                    unpickedIDs =
+                        List.filter (\m -> m.status == Nothing) model.maps
+                            |> List.map (\m -> m.id)
+
+                    unpickedIDGen =
+                        sample unpickedIDs
+                            |> Random.map (Maybe.withDefault 1)
+                in
+                    ( model, Random.generate SetMapStatus unpickedIDGen )
+
             NoOp ->
                 ( model, Cmd.none )
 
@@ -115,7 +130,7 @@ getNextStateCmd nextModeState =
         Just modeState ->
             case modeState.phase of
                 Rand ->
-                    Cmd.none
+                    Task.perform identity (Task.succeed SetRandom)
 
                 _ ->
                     Cmd.none
