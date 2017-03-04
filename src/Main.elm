@@ -95,15 +95,33 @@ update msg model =
 
                     nextModeState =
                         getNextModeState modeState currentMode
+
+                    nextCmd =
+                        getNextStateCmd nextModeState
                 in
                     ( { model
                         | currentModeState = nextModeState
                       }
-                    , Cmd.none
+                    , nextCmd
                     )
 
             NoOp ->
                 ( model, Cmd.none )
+
+
+getNextStateCmd : Maybe State -> Cmd Msg
+getNextStateCmd nextModeState =
+    case nextModeState of
+        Just modeState ->
+            case modeState.phase of
+                Rand ->
+                    Cmd.none
+
+                _ ->
+                    Cmd.none
+
+        _ ->
+            Cmd.none
 
 
 changeMapStatus : Int -> Maybe State -> Map -> Map
