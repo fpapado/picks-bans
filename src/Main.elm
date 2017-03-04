@@ -69,6 +69,7 @@ type Phase
 type Msg
     = SetMapStatus Int
     | AdvancePhase
+    | NoOp
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -100,6 +101,9 @@ update msg model =
                       }
                     , Cmd.none
                     )
+
+            NoOp ->
+                ( model, Cmd.none )
 
 
 changeMapStatus : Int -> Maybe State -> Map -> Map
@@ -222,20 +226,29 @@ stateView team maybeState =
 
 mapView : Map -> Html Msg
 mapView map =
-    div
-        [ class "ph2 mb3"
-        , style [ ( "flex", "0 0 33%" ) ]
-        , onClick <| SetMapStatus map.id
-        ]
-        [ div [ class "relative" ]
-            [ statusView map.status
-            , img
-                [ src map.imgurl
-                , class "w-100"
-                ]
-                []
+    let
+        clickEffect =
+            case map.status of
+                Nothing ->
+                    SetMapStatus map.id
+
+                _ ->
+                    NoOp
+    in
+        div
+            [ class "ph2 mb3"
+            , style [ ( "flex", "0 0 33%" ) ]
+            , onClick <| clickEffect
             ]
-        ]
+            [ div [ class "relative" ]
+                [ statusView map.status
+                , img
+                    [ src map.imgurl
+                    , class "w-100"
+                    ]
+                    []
+                ]
+            ]
 
 
 statusView : Maybe Phase -> Html Msg
