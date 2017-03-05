@@ -1,18 +1,20 @@
 # Next
 Add event title
-Add team names
 Send SetMode Msg at the start
-Toggle which maps are in play
+Coat of paint
 
 # Later
+Floor on how many maps per game mode?
 Factor out svg's, map view?
 "Restart" functionality with same settings
-Manual advance AND/OR undo
-Delay in Selection / animation
 
 # Even later
 Factor out images, views etc.
 Disambiguate Phase/State/ModeState
+
+Manual advance AND/OR undo
+Delay in Selection / animation
+
 
 # Writing
 Routing in 0.18; streamlined, no special update function

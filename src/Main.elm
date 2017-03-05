@@ -1,7 +1,7 @@
 module Main exposing (..)
 
 import Html exposing (..)
-import Html.Attributes exposing (class, href, placeholder, rel, src, style, checked)
+import Html.Attributes exposing (class, href, placeholder, rel, src, style, checked, type_)
 import Html.Events exposing (..)
 import Random
 import Random.Extra exposing (sample)
@@ -82,6 +82,7 @@ type Msg
     | SetMode Int
     | ToggleMapInPlay Int
     | SyncPlayMaps
+    | SetTeamName Int String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -180,6 +181,14 @@ update msg model =
             in
                 { model | playMaps = newPlayMaps } ! []
 
+        SetTeamName teamID name ->
+            let
+                newTeams =
+                    model.teams
+                        |> List.map (changeTeamName teamID name)
+            in
+                { model | teams = newTeams } ! []
+
 
 toggleMapInPlay : Int -> Map -> Map
 toggleMapInPlay id mp =
@@ -189,6 +198,16 @@ toggleMapInPlay id mp =
 
         False ->
             mp
+
+
+changeTeamName : Int -> String -> Team -> Team
+changeTeamName id name team =
+    case (team.id == id) of
+        True ->
+            { team | name = name }
+
+        False ->
+            team
 
 
 getNextStateCmd : Maybe State -> Cmd Msg
@@ -292,6 +311,7 @@ setupView model =
         , div [ class "clearfix" ]
             [ modeSelectView model
             , mapSelectView model
+            , teamNameSelectView model
             ]
         ]
 
@@ -308,12 +328,32 @@ modeSelectView model =
 
 mapSelectView : Model -> Html Msg
 mapSelectView model =
-    div [ class "fl pa3 w-100 w-50-ns" ]
-        [ fieldset [] <|
-            List.map
-                (\mp -> checkBox (ToggleMapInPlay mp.id) mp.title mp.inPlay)
-                model.allMaps
-        ]
+    let
+        checkBoxItem mp =
+            checkBox (ToggleMapInPlay mp.id) mp.title mp.inPlay
+    in
+        div [ class "fl pa3 w-100 w-50-ns" ]
+            [ fieldset [] <|
+                List.map checkBoxItem model.allMaps
+            ]
+
+
+teamNameSelectView : Model -> Html Msg
+teamNameSelectView model =
+    let
+        inputItem tm =
+            input
+                [ type_ "text"
+                , onInput (SetTeamName tm.id)
+                , class "db mt3 mb3"
+                , placeholder tm.name
+                ]
+                []
+    in
+        div [ class "pa3 w-100" ]
+            [ h3 [ class "f4 navy" ] [ text "Team Names" ]
+            , fieldset [] <| List.map inputItem model.teams
+            ]
 
 
 checkBox : msg -> String -> Bool -> Html msg
