@@ -202,15 +202,28 @@ view model =
                 Nothing ->
                     text "Page not found :("
     in
-        div [ class "mw8-ns pa3 center" ]
+        main_ []
             [ headerView
-            , body
+            , Html.body [ class "mw8-ns pa3 center" ]
+                [ body ]
             ]
 
 
 headerView : Html Msg
 headerView =
-    h1 [ class "f2 f1-ns tc sans-serif navy" ] [ text "Picks and Bans" ]
+    header [ class "bg-black-90 w-100 ph3 pv3 pv4-ns ph4-m ph5-l" ]
+        [ nav [ class "f6 fw6 ttu tracked" ] <|
+            [ h1 [ class "f6 dib white mr5" ]
+                [ text "Picks and Bans" ]
+            ]
+                ++ List.map link links
+        ]
+
+
+link : ( Route.Location, String ) -> Html Msg
+link ( location, label ) =
+    a [ href <| Route.urlFor location, class "dib dim link white mr3" ]
+        [ text label ]
 
 
 playView : Model -> Html Msg
@@ -387,6 +400,13 @@ subscriptions model =
 init : Navigation.Location -> ( Model, Cmd Msg )
 init location =
     ( initModel, Cmd.none )
+
+
+links : List ( Route.Location, String )
+links =
+    [ ( Route.Setup, "Setup" )
+    , ( Route.Play, "Selection" )
+    ]
 
 
 bo3Mode : Mode

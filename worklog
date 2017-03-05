@@ -3,7 +3,6 @@ Add event title
 Add team names
 Toggle game mode
 Toggle which maps are in play
-Separate setup/play screens?
 
 # Later
 Manual advance AND/OR undo
@@ -15,3 +14,5 @@ Disambiguate Phase/State/ModeState
 
 # Writing
 Routing in 0.18; streamlined, no special update function
+Readme udpate with screens, discussion
+knewter mantle-ui credit for routing ideas

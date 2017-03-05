@@ -30,8 +30,22 @@ locFor path =
             [] ->
                 Just Setup
 
-            [ "play" ] ->
+            [ "selection" ] ->
                 Just Play
 
             _ ->
                 Nothing
+
+
+urlFor : Location -> String
+urlFor location =
+    let
+        url =
+            case location of
+                Setup ->
+                    "/"
+
+                Play ->
+                    "/selection"
+    in
+        "#" ++ url
