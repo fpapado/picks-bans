@@ -1,7 +1,7 @@
 module Main exposing (..)
 
 import Html exposing (..)
-import Html.Attributes exposing (class, href, placeholder, rel, src, style)
+import Html.Attributes exposing (class, href, placeholder, rel, src, style, checked)
 import Html.Events exposing (..)
 import Random
 import Random.Extra exposing (sample)
@@ -77,62 +77,88 @@ type Msg
     | SetRandom
     | NoOp
     | UrlChange Navigation.Location
+    | SetMode Int
+    | ResetMaps
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    let
-        modeState =
-            model.currentModeState
-    in
-        case msg of
-            SetMapStatus map_id ->
+    case msg of
+        SetMapStatus map_id ->
+            let
+                modeState =
+                    model.currentModeState
+            in
                 ( { model
                     | maps = List.map (changeMapStatus map_id modeState) model.maps
                   }
                 , Task.perform identity (Task.succeed AdvancePhase)
                 )
 
-            AdvancePhase ->
-                let
-                    currentMode =
-                        List.filter (\m -> m.id == model.currentMode) model.modes
-                            |> List.head
-                            |> Maybe.withDefault bo3Mode
+        AdvancePhase ->
+            let
+                modeState =
+                    model.currentModeState
 
-                    nextModeState =
-                        getNextModeState modeState currentMode
+                currentMode =
+                    List.filter (\m -> m.id == model.currentMode) model.modes
+                        |> List.head
+                        |> Maybe.withDefault bo3Mode
 
-                    nextCmd =
-                        getNextStateCmd nextModeState
-                in
-                    ( { model
-                        | currentModeState = nextModeState
-                      }
-                    , nextCmd
-                    )
+                nextModeState =
+                    getNextModeState modeState currentMode
 
-            SetRandom ->
-                let
-                    unpickedIDs =
-                        List.filter (\m -> m.status == Nothing) model.maps
-                            |> List.map (\m -> m.id)
+                nextCmd =
+                    getNextStateCmd nextModeState
+            in
+                ( { model
+                    | currentModeState = nextModeState
+                  }
+                , nextCmd
+                )
 
-                    unpickedIDGen =
-                        sample unpickedIDs
-                            |> Random.map (Maybe.withDefault 1)
-                in
-                    ( model, Random.generate SetMapStatus unpickedIDGen )
+        SetRandom ->
+            let
+                unpickedIDs =
+                    List.filter (\m -> m.status == Nothing) model.maps
+                        |> List.map (\m -> m.id)
 
-            NoOp ->
-                ( model, Cmd.none )
+                unpickedIDGen =
+                    sample unpickedIDs
+                        |> Random.map (Maybe.withDefault 1)
+            in
+                ( model, Random.generate SetMapStatus unpickedIDGen )
 
-            UrlChange location ->
-                let
-                    newRoute =
-                        Route.locFor location
-                in
-                    ( { model | route = newRoute }, Cmd.none )
+        NoOp ->
+            ( model, Cmd.none )
+
+        UrlChange location ->
+            let
+                newRoute =
+                    Route.locFor location
+            in
+                ( { model | route = newRoute }, Cmd.none )
+
+        SetMode newModeID ->
+            let
+                newMode =
+                    model.modes
+                        |> List.filter (\m -> m.id == newModeID)
+                        |> List.head
+            in
+                case newMode of
+                    Just newMode ->
+                        { model
+                            | currentMode = newModeID
+                            , currentModeState = List.head newMode.states
+                        }
+                            ! [ Task.perform identity (Task.succeed ResetMaps) ]
+
+                    Nothing ->
+                        model ! []
+
+        ResetMaps ->
+            { model | maps = initMaps } ! []
 
 
 getNextStateCmd : Maybe State -> Cmd Msg
@@ -194,7 +220,7 @@ view model =
         body =
             case model.route of
                 Just (Route.Setup) ->
-                    text "Setup view"
+                    setupView model
 
                 Just (Route.Play) ->
                     playView model
@@ -211,8 +237,8 @@ view model =
 
 headerView : Html Msg
 headerView =
-    header [ class "bg-black-90 w-100 ph3 pv3 pv4-ns ph4-m ph5-l" ]
-        [ nav [ class "f6 fw6 ttu tracked" ] <|
+    header [ class "bg-navy w-100 ph3 pv3 pv4-ns ph4-m ph5-l" ]
+        [ nav [ class "mw8-ns f6 fw6 ttu tracked center" ] <|
             [ h1 [ class "f6 dib white mr5" ]
                 [ text "Picks and Bans" ]
             ]
@@ -224,6 +250,37 @@ link : ( Route.Location, String ) -> Html Msg
 link ( location, label ) =
     a [ href <| Route.urlFor location, class "dib dim link white mr3" ]
         [ text label ]
+
+
+setupView : Model -> Html Msg
+setupView model =
+    -- set mode: set currentMode and currentModeState
+    -- set maps:
+    -- setTeamName: ...
+    div []
+        [ h2 [ class "f3 f2-ns tc sans-serif" ] [ text "Setup" ]
+        , div [ class "clearfix" ]
+            [ modeSelectView model
+            ]
+        ]
+
+
+modeSelectView : Model -> Html Msg
+modeSelectView model =
+    div [ class "pa3 w-100 w-50-ns" ]
+        [ fieldset [] <|
+            List.map
+                (\mt -> checkBox (SetMode mt.id) mt.title (mt.id == model.currentMode))
+                model.modes
+        ]
+
+
+checkBox : msg -> String -> Bool -> Html msg
+checkBox msg title check =
+    label []
+        [ input [ Html.Attributes.type_ "checkbox", onClick msg, checked check ] []
+        , text title
+        ]
 
 
 playView : Model -> Html Msg
@@ -416,7 +473,7 @@ bo3Mode =
 
 bo1Mode : Mode
 bo1Mode =
-    { id = 0, mtype = Bo1, title = "Best of 5", states = bo1States, currentState = 0 }
+    { id = 1, mtype = Bo1, title = "Best of 1", states = bo1States, currentState = 0 }
 
 
 bo3States : List State

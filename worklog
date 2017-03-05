@@ -1,10 +1,12 @@
 # Next
 Add event title
 Add team names
-Toggle game mode
+Send SetMode Msg at the start
 Toggle which maps are in play
 
 # Later
+Factor out svg's, map view?
+"Restart" functionality with same settings
 Manual advance AND/OR undo
 Delay in Selection / animation
 
