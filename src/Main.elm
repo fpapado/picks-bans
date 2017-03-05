@@ -33,7 +33,6 @@ type alias Mode =
     , mtype : ModeType
     , title : String
     , states : List State
-    , currentState : Int
     }
 
 
@@ -609,12 +608,12 @@ links =
 
 bo3Mode : Mode
 bo3Mode =
-    { id = 0, mtype = Bo3, title = "Best of 3", states = bo3States, currentState = 0 }
+    { id = 0, mtype = Bo3, title = "Best of 3", states = bo3States }
 
 
 bo1Mode : Mode
 bo1Mode =
-    { id = 1, mtype = Bo1, title = "Best of 1", states = bo1States, currentState = 0 }
+    { id = 1, mtype = Bo1, title = "Best of 1", states = bo1States }
 
 
 bo3States : List State
@@ -652,10 +651,8 @@ initModel =
 
 initModeState : State
 initModeState =
-    { id = 0
-    , phase = Ban
-    , teamID = 0
-    }
+    List.head bo3States
+        |> Maybe.withDefault { id = 0, teamID = 0, phase = Ban }
 
 
 initTeams : List Team
