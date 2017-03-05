@@ -319,7 +319,7 @@ view model =
                 Nothing ->
                     text "Page not found :("
     in
-        main_ []
+        main_ [ class "sans-serif" ]
             [ headerView
             , Html.body [ class "mw8-ns pa3 center" ]
                 [ body ]
@@ -404,7 +404,7 @@ teamNameSelectView model =
             input
                 [ type_ "text"
                 , onInput (SetTeamName tm.id)
-                , class "db mt3 mb3"
+                , class "input-reset ba b--black-20 pa2 mt3 mb3 db w-100"
                 , placeholder tm.name
                 ]
                 []
@@ -423,7 +423,7 @@ eventNameSelectView model =
             [ input
                 [ type_ "text"
                 , onInput (SetEventName)
-                , class "db mt3 mb3"
+                , class "input-reset ba b--black-20 pa2 mt3 mb3 db w-100"
                 , placeholder model.eventName
                 ]
                 []
