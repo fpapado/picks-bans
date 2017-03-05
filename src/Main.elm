@@ -136,27 +136,18 @@ update msg model =
                 newRoute =
                     Route.locFor location
             in
-                ( { model | route = newRoute }, Cmd.none )
+                ( { model | route = newRoute }
+                    |> resetModeState
+                    |> syncPlayMapsFromAll
+                , Cmd.none
+                )
 
         SetMode newModeID ->
-            let
-                newMode =
-                    model.modes
-                        |> List.filter (\m -> m.id == newModeID)
-                        |> List.head
-            in
-                case newMode of
-                    Just newMode ->
-                        ( { model
-                            | currentMode = newModeID
-                            , currentModeState = List.head newMode.states
-                          }
-                            |> syncPlayMapsFromAll
-                        , Cmd.none
-                        )
-
-                    Nothing ->
-                        model ! []
+            ( { model | currentMode = newModeID }
+                |> resetModeState
+                |> syncPlayMapsFromAll
+            , Cmd.none
+            )
 
         ToggleMapInPlay mapID ->
             let
@@ -166,6 +157,7 @@ update msg model =
             in
                 ( { model | allMaps = newAllMaps }
                     |> syncPlayMapsFromAll
+                    |> resetModeState
                 , Cmd.none
                 )
 
@@ -177,6 +169,7 @@ update msg model =
             -- allMaps
             ( model
                 |> syncPlayMapsFromAll
+                |> resetModeState
             , Cmd.none
             )
 
@@ -259,6 +252,26 @@ updateNextModeState model =
         { model | currentModeState = nextModeState }
 
 
+resetModeState : Model -> Model
+resetModeState model =
+    let
+        currentMode =
+            model.modes
+                |> List.filter (\m -> m.id == model.currentMode)
+                |> List.head
+    in
+        case currentMode of
+            Just currentMode ->
+                let
+                    initModeState =
+                        List.head currentMode.states
+                in
+                    { model | currentModeState = initModeState }
+
+            Nothing ->
+                model
+
+
 syncPlayMapsFromAll : Model -> Model
 syncPlayMapsFromAll model =
     let
@@ -330,6 +343,15 @@ link ( location, label ) =
         [ text label ]
 
 
+btnLink : ( Route.Location, String ) -> Html Msg
+btnLink ( location, title ) =
+    a
+        [ class "w-100 w-50-ns input-reset dib mr3 f5 pa3 link bw1 ba b--dark-blue bg-white black-80 pointer bg-animate hover-white hover-bg-dark-blue"
+        , href <| Route.urlFor location
+        ]
+        [ text title ]
+
+
 setupView : Model -> Html Msg
 setupView model =
     -- set mode: set currentMode and currentModeState
@@ -338,18 +360,23 @@ setupView model =
     div []
         [ h2 [ class "f3 f2-ns tc sans-serif" ] [ text "Setup" ]
         , div [ class "clearfix" ]
-            [ modeSelectView model
-            , mapSelectView model
-            , teamNameSelectView model
-            , eventNameSelectView model
+            [ div [ class "fl w-100 w-50-ns pa3" ]
+                [ modeSelectView model
+                , teamNameSelectView model
+                , eventNameSelectView model
+                ]
+            , div [ class "fl w-100 w-50-ns pv0 ph3 pv3-ns" ]
+                [ mapSelectView model
+                , btnLink ( Route.Play, "Start" )
+                ]
             ]
         ]
 
 
 modeSelectView : Model -> Html Msg
 modeSelectView model =
-    div [ class "fl pa3 w-100 w-50-ns" ]
-        [ h3 [ class "f4 navy" ] [ text "Mode Select" ]
+    div [ class "" ]
+        [ h3 [ class "mt0 mb2 f4 navy" ] [ text "Mode Select" ]
         , fieldset [] <|
             List.map
                 (\mt -> checkBox (SetMode mt.id) mt.title (mt.id == model.currentMode))
@@ -363,8 +390,8 @@ mapSelectView model =
         checkBoxItem mp =
             checkBox (ToggleMapInPlay mp.id) mp.title mp.inPlay
     in
-        div [ class "fl pa3 w-100 w-50-ns" ]
-            [ h3 [ class "f4 navy" ] [ text "Map Select" ]
+        div [ class "mb3" ]
+            [ h3 [ class "mt4 mt0-ns mb2 f4 navy" ] [ text "Map Select" ]
             , fieldset [] <|
                 List.map checkBoxItem model.allMaps
             ]
@@ -382,16 +409,16 @@ teamNameSelectView model =
                 ]
                 []
     in
-        div [ class "fl pa3 w-100 w-50-ns" ]
-            [ h3 [ class "f4 navy" ] [ text "Team Names" ]
+        div [ class "" ]
+            [ h3 [ class "mt4 mb2 f4 navy" ] [ text "Team Names" ]
             , fieldset [] <| List.map inputItem model.teams
             ]
 
 
 eventNameSelectView : Model -> Html Msg
 eventNameSelectView model =
-    div [ class "fl pa3 w-100 w-50-ns" ]
-        [ h3 [ class "f4 navy" ] [ text "Event name" ]
+    div [ class "" ]
+        [ h3 [ class "mt4 mb2 f4 navy" ] [ text "Event name" ]
         , fieldset []
             [ input
                 [ type_ "text"
