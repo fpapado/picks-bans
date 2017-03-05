@@ -84,6 +84,7 @@ type Msg
     | SyncPlayMaps
     | SetTeamName Int String
     | SetEventName String
+    | RestartSelection
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -183,6 +184,13 @@ update msg model =
 
         SetEventName newEventName ->
             { model | eventName = newEventName } ! []
+
+        RestartSelection ->
+            ( model
+                |> syncPlayMapsFromAll
+                |> resetModeState
+            , Cmd.none
+            )
 
 
 toggleMapInPlay : Int -> Map -> Map
@@ -334,6 +342,12 @@ headerView =
                 [ text "Picks and Bans" ]
             ]
                 ++ List.map link links
+                ++ [ a
+                        [ class "dib pointer dim link white mr3"
+                        , onClick RestartSelection
+                        ]
+                        [ text "Restart" ]
+                   ]
         ]
 
 

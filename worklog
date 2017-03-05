@@ -1,17 +1,15 @@
-# Next
-"Restart" functionality with same settings
-
-# Later
+# Next (Debt)
 Factor out svg's, map view?
 Factor out images, views etc.
-
-# Even later
-Floor on how many maps per game mode?
+Factor out setup / play stuff
 Disambiguate Phase/State/ModeState
+
+# Later (Functionality/UX)
+Floor on how many maps per game mode?
 Manual advance AND/OR undo
-Delay in Selection / animation
+Delay in Random Selection / animation
 
 # Writing
 Routing in 0.18; streamlined, no special update function
 Readme udpate with screens, discussion
-knewter mantle-ui credit for routing ideas
+knewter & mantle-ui credit for routing ideas
