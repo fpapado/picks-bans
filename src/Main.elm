@@ -24,6 +24,7 @@ type alias Model =
     , modes : List Mode
     , teams : List Team
     , route : Route.Model
+    , eventName : String
     }
 
 
@@ -83,6 +84,7 @@ type Msg
     | ToggleMapInPlay Int
     | SyncPlayMaps
     | SetTeamName Int String
+    | SetEventName String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -188,6 +190,9 @@ update msg model =
                         |> List.map (changeTeamName teamID name)
             in
                 { model | teams = newTeams } ! []
+
+        SetEventName newEventName ->
+            { model | eventName = newEventName } ! []
 
 
 toggleMapInPlay : Int -> Map -> Map
@@ -312,6 +317,7 @@ setupView model =
             [ modeSelectView model
             , mapSelectView model
             , teamNameSelectView model
+            , eventNameSelectView model
             ]
         ]
 
@@ -350,10 +356,26 @@ teamNameSelectView model =
                 ]
                 []
     in
-        div [ class "pa3 w-100" ]
+        div [ class "fl pa3 w-100 w-50-ns" ]
             [ h3 [ class "f4 navy" ] [ text "Team Names" ]
             , fieldset [] <| List.map inputItem model.teams
             ]
+
+
+eventNameSelectView : Model -> Html Msg
+eventNameSelectView model =
+    div [ class "fl pa3 w-100 w-50-ns" ]
+        [ h3 [ class "f4 navy" ] [ text "Event name" ]
+        , fieldset []
+            [ input
+                [ type_ "text"
+                , onInput (SetEventName)
+                , class "db mt3 mb3"
+                , placeholder model.eventName
+                ]
+                []
+            ]
+        ]
 
 
 checkBox : msg -> String -> Bool -> Html msg
@@ -381,7 +403,8 @@ playView model =
                         |> Maybe.withDefault { name = "", id = -1 }
     in
         div []
-            [ stateView currentTeam modeState
+            [ eventNameView model.eventName
+            , stateView currentTeam modeState
             , div [ class "flex flex-wrap" ]
                 (List.map mapView model.playMaps)
             , picksBansView model.playMaps
@@ -413,6 +436,11 @@ listView title maps style_ =
             [ h3 [ class <| "f3 tc " ++ style_ ] [ text title ]
             , div [ class "" ] <| List.map cellView maps
             ]
+
+
+eventNameView : String -> Html Msg
+eventNameView name =
+    h3 [ class "f3 dark-blue tc" ] [ text name ]
 
 
 stateView : Team -> Maybe State -> Html Msg
@@ -579,13 +607,14 @@ bo1States =
 
 initModel : Model
 initModel =
-    { playMaps = initMaps
+    { playMaps = []
     , allMaps = initMaps
     , teams = initTeams
     , currentModeState = Just initModeState
     , currentMode = 0
     , modes = [ bo3Mode, bo1Mode ]
     , route = Route.init (Just Route.Setup)
+    , eventName = ""
     }
 
 
@@ -606,13 +635,14 @@ initTeams =
 
 initMaps : List Map
 initMaps =
-    [ { id = 0, imgurl = "images/Cache.jpg", title = "Cache", status = Nothing, inPlay = True }
-    , { id = 1, imgurl = "images/Cobblestone.jpg", title = "Cobblestone", status = Nothing, inPlay = True }
-    , { id = 2, imgurl = "images/Dust2.jpg", title = "Dust 2", status = Nothing, inPlay = True }
-    , { id = 3, imgurl = "images/Inferno.jpg", title = "Inferno", status = Nothing, inPlay = True }
-    , { id = 4, imgurl = "images/Mirage.jpg", title = "Mirage", status = Nothing, inPlay = True }
-    , { id = 5, imgurl = "images/Overpass.jpg", title = "Overpass", status = Nothing, inPlay = True }
-    , { id = 6, imgurl = "images/Train.jpg", title = "Train", status = Nothing, inPlay = True }
+    [ { id = 0, imgurl = "images/Cache.png", title = "Cache", status = Nothing, inPlay = False }
+    , { id = 1, imgurl = "images/Cbble.png", title = "Cobblestone", status = Nothing, inPlay = False }
+    , { id = 2, imgurl = "images/Dust_2.png", title = "Dust 2", status = Nothing, inPlay = False }
+    , { id = 3, imgurl = "images/Inferno.png", title = "Inferno", status = Nothing, inPlay = False }
+    , { id = 4, imgurl = "images/Mirage.png", title = "Mirage", status = Nothing, inPlay = False }
+    , { id = 5, imgurl = "images/Nuke.png", title = "Nuke", status = Nothing, inPlay = False }
+    , { id = 6, imgurl = "images/Overpass.png", title = "Overpass", status = Nothing, inPlay = False }
+    , { id = 7, imgurl = "images/Train.png", title = "Train", status = Nothing, inPlay = False }
     ]
 
 

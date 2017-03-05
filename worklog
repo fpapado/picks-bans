@@ -1,12 +1,13 @@
 # Next
-Add event title
 Send SetMode Msg at the start
+Add "start" button
 Coat of paint
+Add new maps
+"Restart" functionality with same settings
 
 # Later
 Floor on how many maps per game mode?
 Factor out svg's, map view?
-"Restart" functionality with same settings
 
 # Even later
 Factor out images, views etc.
