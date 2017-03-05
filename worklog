@@ -12,3 +12,6 @@ Delay in Selection / animation
 # Even later
 Factor out images, views etc.
 Disambiguate Phase/State/ModeState
+
+# Writing
+Routing in 0.18; streamlined, no special update function

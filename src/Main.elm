@@ -8,6 +8,8 @@ import Random.Extra exposing (sample)
 import Svg
 import Svg.Attributes exposing (version, viewBox, width, height, fill, d)
 import Task
+import Route
+import Navigation
 
 
 -- Model
@@ -20,6 +22,7 @@ type alias Model =
     , currentMode : Int
     , modes : List Mode
     , teams : List Team
+    , route : Route.Model
     }
 
 
@@ -73,6 +76,7 @@ type Msg
     | AdvancePhase
     | SetRandom
     | NoOp
+    | UrlChange Navigation.Location
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -122,6 +126,13 @@ update msg model =
 
             NoOp ->
                 ( model, Cmd.none )
+
+            UrlChange location ->
+                let
+                    newRoute =
+                        Route.locFor location
+                in
+                    ( { model | route = newRoute }, Cmd.none )
 
 
 getNextStateCmd : Maybe State -> Cmd Msg
@@ -180,6 +191,31 @@ getNextModeState maybeState currentMode =
 view : Model -> Html Msg
 view model =
     let
+        body =
+            case model.route of
+                Just (Route.Setup) ->
+                    text "Setup view"
+
+                Just (Route.Play) ->
+                    playView model
+
+                Nothing ->
+                    text "Page not found :("
+    in
+        div [ class "mw8-ns pa3 center" ]
+            [ headerView
+            , body
+            ]
+
+
+headerView : Html Msg
+headerView =
+    h1 [ class "f2 f1-ns tc sans-serif navy" ] [ text "Picks and Bans" ]
+
+
+playView : Model -> Html Msg
+playView model =
+    let
         modeState =
             model.currentModeState
 
@@ -193,9 +229,8 @@ view model =
                         |> List.head
                         |> Maybe.withDefault { name = "", id = -1 }
     in
-        div [ class "mw8-ns pa3 center" ]
-            [ h1 [ class "f2 f1-ns tc sans-serif navy" ] [ text "Picks and Bans" ]
-            , stateView currentTeam modeState
+        div []
+            [ stateView currentTeam modeState
             , div [ class "flex flex-wrap" ]
                 (List.map mapView model.maps)
             , picksBansView model.maps
@@ -349,8 +384,8 @@ subscriptions model =
 -- Init
 
 
-init : ( Model, Cmd Msg )
-init =
+init : Navigation.Location -> ( Model, Cmd Msg )
+init location =
     ( initModel, Cmd.none )
 
 
@@ -386,7 +421,13 @@ bo1States =
 
 initModel : Model
 initModel =
-    { maps = initMaps, teams = initTeams, currentModeState = Just initModeState, currentMode = 0, modes = [ bo3Mode, bo1Mode ] }
+    { maps = initMaps
+    , teams = initTeams
+    , currentModeState = Just initModeState
+    , currentMode = 0
+    , modes = [ bo3Mode, bo1Mode ]
+    , route = Route.init (Just Route.Setup)
+    }
 
 
 initModeState : State
@@ -418,7 +459,7 @@ initMaps =
 
 main : Program Never Model Msg
 main =
-    program
+    Navigation.program UrlChange
         { init = init
         , update = update
         , subscriptions = subscriptions
