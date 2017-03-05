@@ -91,37 +91,31 @@ update msg model =
     case msg of
         SetMapStatus map_id ->
             let
-                modeState =
-                    model.currentModeState
-            in
-                ( { model
-                    | playMaps = List.map (changeMapStatus map_id modeState) model.playMaps
-                  }
-                , Task.perform identity (Task.succeed AdvancePhase)
-                )
+                newPlayMaps =
+                    List.map (changeMapStatus map_id model.currentModeState) model.playMaps
 
-        AdvancePhase ->
-            let
-                modeState =
-                    model.currentModeState
-
-                currentMode =
-                    List.filter (\m -> m.id == model.currentMode) model.modes
-                        |> List.head
-                        |> Maybe.withDefault bo3Mode
-
-                nextModeState =
-                    getNextModeState modeState currentMode
+                newModel =
+                    { model | playMaps = newPlayMaps }
+                        |> updateNextModeState
 
                 nextCmd =
-                    getNextStateCmd nextModeState
+                    getNextStateCmd newModel.currentModeState
             in
-                ( { model
-                    | currentModeState = nextModeState
-                  }
-                , nextCmd
-                )
+                ( newModel, nextCmd )
 
+        -- for manual advance, not used atm
+        AdvancePhase ->
+            let
+                newModel =
+                    model
+                        |> updateNextModeState
+
+                nextCmd =
+                    getNextStateCmd newModel.currentModeState
+            in
+                ( newModel, nextCmd )
+
+        -- called in nextCmd or manually
         SetRandom ->
             let
                 unpickedIDs =
@@ -153,11 +147,13 @@ update msg model =
             in
                 case newMode of
                     Just newMode ->
-                        { model
+                        ( { model
                             | currentMode = newModeID
                             , currentModeState = List.head newMode.states
-                        }
-                            ! [ Task.perform identity (Task.succeed SyncPlayMaps) ]
+                          }
+                            |> syncPlayMapsFromAll
+                        , Cmd.none
+                        )
 
                     Nothing ->
                         model ! []
@@ -168,19 +164,21 @@ update msg model =
                     model.allMaps
                         |> List.map (toggleMapInPlay mapID)
             in
-                { model | allMaps = newAllMaps } ! [ Task.perform identity (Task.succeed SyncPlayMaps) ]
+                ( { model | allMaps = newAllMaps }
+                    |> syncPlayMapsFromAll
+                , Cmd.none
+                )
 
+        -- for manual sync, not used atm
         SyncPlayMaps ->
             -- There is some duplication, but since sync is one-way,
             -- it should be fine. This also has the advantage of allowing
             -- selection-specific changes to playMaps, and resets based on
             -- allMaps
-            let
-                newPlayMaps =
-                    model.allMaps
-                        |> List.filter (\mp -> mp.inPlay)
-            in
-                { model | playMaps = newPlayMaps } ! []
+            ( model
+                |> syncPlayMapsFromAll
+            , Cmd.none
+            )
 
         SetTeamName teamID name ->
             let
@@ -242,6 +240,33 @@ changeMapStatus map_id maybeState mp =
 
         Nothing ->
             mp
+
+
+updateNextModeState : Model -> Model
+updateNextModeState model =
+    let
+        modeState =
+            model.currentModeState
+
+        currentMode =
+            List.filter (\m -> m.id == model.currentMode) model.modes
+                |> List.head
+                |> Maybe.withDefault bo3Mode
+
+        nextModeState =
+            getNextModeState modeState currentMode
+    in
+        { model | currentModeState = nextModeState }
+
+
+syncPlayMapsFromAll : Model -> Model
+syncPlayMapsFromAll model =
+    let
+        newPlayMaps =
+            model.allMaps
+                |> List.filter (\mp -> mp.inPlay)
+    in
+        { model | playMaps = newPlayMaps }
 
 
 getNextModeState : Maybe State -> Mode -> Maybe State

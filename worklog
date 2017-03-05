@@ -1,22 +1,17 @@
 # Next
-Send SetMode Msg at the start
 Add "start" button
-Remove synchronous Msg?
 Coat of paint
-Add new maps
 "Restart" functionality with same settings
 
 # Later
-Floor on how many maps per game mode?
 Factor out svg's, map view?
+Factor out images, views etc.
 
 # Even later
-Factor out images, views etc.
+Floor on how many maps per game mode?
 Disambiguate Phase/State/ModeState
-
 Manual advance AND/OR undo
 Delay in Selection / animation
-
 
 # Writing
 Routing in 0.18; streamlined, no special update function
