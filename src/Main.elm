@@ -17,7 +17,8 @@ import Navigation
 
 
 type alias Model =
-    { maps : List Map
+    { allMaps : List Map
+    , playMaps : List Map
     , currentModeState : Maybe State
     , currentMode : Int
     , modes : List Mode
@@ -52,6 +53,7 @@ type alias Map =
     , imgurl : String
     , title : String
     , status : Maybe Phase
+    , inPlay : Bool
     }
 
 
@@ -78,7 +80,8 @@ type Msg
     | NoOp
     | UrlChange Navigation.Location
     | SetMode Int
-    | ResetMaps
+    | ToggleMapInPlay Int
+    | SyncPlayMaps
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -90,7 +93,7 @@ update msg model =
                     model.currentModeState
             in
                 ( { model
-                    | maps = List.map (changeMapStatus map_id modeState) model.maps
+                    | playMaps = List.map (changeMapStatus map_id modeState) model.playMaps
                   }
                 , Task.perform identity (Task.succeed AdvancePhase)
                 )
@@ -120,7 +123,7 @@ update msg model =
         SetRandom ->
             let
                 unpickedIDs =
-                    List.filter (\m -> m.status == Nothing) model.maps
+                    List.filter (\m -> m.status == Nothing) model.playMaps
                         |> List.map (\m -> m.id)
 
                 unpickedIDGen =
@@ -152,13 +155,40 @@ update msg model =
                             | currentMode = newModeID
                             , currentModeState = List.head newMode.states
                         }
-                            ! [ Task.perform identity (Task.succeed ResetMaps) ]
+                            ! [ Task.perform identity (Task.succeed SyncPlayMaps) ]
 
                     Nothing ->
                         model ! []
 
-        ResetMaps ->
-            { model | maps = initMaps } ! []
+        ToggleMapInPlay mapID ->
+            let
+                newAllMaps =
+                    model.allMaps
+                        |> List.map (toggleMapInPlay mapID)
+            in
+                { model | allMaps = newAllMaps } ! [ Task.perform identity (Task.succeed SyncPlayMaps) ]
+
+        SyncPlayMaps ->
+            -- There is some duplication, but since sync is one-way,
+            -- it should be fine. This also has the advantage of allowing
+            -- selection-specific changes to playMaps, and resets based on
+            -- allMaps
+            let
+                newPlayMaps =
+                    model.allMaps
+                        |> List.filter (\mp -> mp.inPlay)
+            in
+                { model | playMaps = newPlayMaps } ! []
+
+
+toggleMapInPlay : Int -> Map -> Map
+toggleMapInPlay id mp =
+    case (mp.id == id) of
+        True ->
+            { mp | inPlay = not mp.inPlay }
+
+        False ->
+            mp
 
 
 getNextStateCmd : Maybe State -> Cmd Msg
@@ -261,17 +291,28 @@ setupView model =
         [ h2 [ class "f3 f2-ns tc sans-serif" ] [ text "Setup" ]
         , div [ class "clearfix" ]
             [ modeSelectView model
+            , mapSelectView model
             ]
         ]
 
 
 modeSelectView : Model -> Html Msg
 modeSelectView model =
-    div [ class "pa3 w-100 w-50-ns" ]
+    div [ class "fl pa3 w-100 w-50-ns" ]
         [ fieldset [] <|
             List.map
                 (\mt -> checkBox (SetMode mt.id) mt.title (mt.id == model.currentMode))
                 model.modes
+        ]
+
+
+mapSelectView : Model -> Html Msg
+mapSelectView model =
+    div [ class "fl pa3 w-100 w-50-ns" ]
+        [ fieldset [] <|
+            List.map
+                (\mp -> checkBox (ToggleMapInPlay mp.id) mp.title mp.inPlay)
+                model.allMaps
         ]
 
 
@@ -302,8 +343,8 @@ playView model =
         div []
             [ stateView currentTeam modeState
             , div [ class "flex flex-wrap" ]
-                (List.map mapView model.maps)
-            , picksBansView model.maps
+                (List.map mapView model.playMaps)
+            , picksBansView model.playMaps
             ]
 
 
@@ -498,7 +539,8 @@ bo1States =
 
 initModel : Model
 initModel =
-    { maps = initMaps
+    { playMaps = initMaps
+    , allMaps = initMaps
     , teams = initTeams
     , currentModeState = Just initModeState
     , currentMode = 0
@@ -524,13 +566,13 @@ initTeams =
 
 initMaps : List Map
 initMaps =
-    [ { id = 0, imgurl = "images/Cache.jpg", title = "Cache", status = Nothing }
-    , { id = 1, imgurl = "images/Cobblestone.jpg", title = "Cobblestone", status = Nothing }
-    , { id = 2, imgurl = "images/Dust2.jpg", title = "Dust 2", status = Nothing }
-    , { id = 3, imgurl = "images/Inferno.jpg", title = "Inferno", status = Nothing }
-    , { id = 4, imgurl = "images/Mirage.jpg", title = "Mirage", status = Nothing }
-    , { id = 5, imgurl = "images/Overpass.jpg", title = "Overpass", status = Nothing }
-    , { id = 6, imgurl = "images/Train.jpg", title = "Train", status = Nothing }
+    [ { id = 0, imgurl = "images/Cache.jpg", title = "Cache", status = Nothing, inPlay = True }
+    , { id = 1, imgurl = "images/Cobblestone.jpg", title = "Cobblestone", status = Nothing, inPlay = True }
+    , { id = 2, imgurl = "images/Dust2.jpg", title = "Dust 2", status = Nothing, inPlay = True }
+    , { id = 3, imgurl = "images/Inferno.jpg", title = "Inferno", status = Nothing, inPlay = True }
+    , { id = 4, imgurl = "images/Mirage.jpg", title = "Mirage", status = Nothing, inPlay = True }
+    , { id = 5, imgurl = "images/Overpass.jpg", title = "Overpass", status = Nothing, inPlay = True }
+    , { id = 6, imgurl = "images/Train.jpg", title = "Train", status = Nothing, inPlay = True }
     ]
 
 
