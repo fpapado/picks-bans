@@ -1,7 +1,7 @@
 module Main exposing (..)
 
 import Html exposing (..)
-import Html.Attributes exposing (class, href, placeholder, rel, src, style, checked, type_)
+import Html.Attributes exposing (class, href, placeholder, rel, src, style, checked, type_, for, id)
 import Html.Events exposing (..)
 import Random
 import Random.Extra exposing (sample)
@@ -325,7 +325,8 @@ setupView model =
 modeSelectView : Model -> Html Msg
 modeSelectView model =
     div [ class "fl pa3 w-100 w-50-ns" ]
-        [ fieldset [] <|
+        [ h3 [ class "f4 navy" ] [ text "Mode Select" ]
+        , fieldset [] <|
             List.map
                 (\mt -> checkBox (SetMode mt.id) mt.title (mt.id == model.currentMode))
                 model.modes
@@ -339,7 +340,8 @@ mapSelectView model =
             checkBox (ToggleMapInPlay mp.id) mp.title mp.inPlay
     in
         div [ class "fl pa3 w-100 w-50-ns" ]
-            [ fieldset [] <|
+            [ h3 [ class "f4 navy" ] [ text "Map Select" ]
+            , fieldset [] <|
                 List.map checkBoxItem model.allMaps
             ]
 
@@ -380,10 +382,17 @@ eventNameSelectView model =
 
 checkBox : msg -> String -> Bool -> Html msg
 checkBox msg title check =
-    label []
-        [ input [ Html.Attributes.type_ "checkbox", onClick msg, checked check ] []
-        , text title
-        ]
+    let
+        titleAsID =
+            title
+                |> String.split " "
+                |> String.join ""
+                |> String.toLower
+    in
+        div [ class "flex items-center mb2" ]
+            [ input [ type_ "checkbox", onClick msg, checked check, class "mr2", id titleAsID ] []
+            , label [ class "lh-copy", for titleAsID ] [ text title ]
+            ]
 
 
 playView : Model -> Html Msg
