@@ -404,6 +404,7 @@ playView model =
     in
         div []
             [ eventNameView model.eventName
+            , warningView model
             , stateView currentTeam modeState
             , div [ class "flex flex-wrap" ]
                 (List.map mapView model.playMaps)
@@ -441,6 +442,28 @@ listView title maps style_ =
 eventNameView : String -> Html Msg
 eventNameView name =
     h3 [ class "f3 dark-blue tc" ] [ text name ]
+
+
+warningView : Model -> Html Msg
+warningView model =
+    let
+        warning content =
+            case content of
+                "" ->
+                    div [] []
+
+                _ ->
+                    div [ class "db pa3 f5 bg-red white" ] [ text content ]
+
+        emptyMapsWarn =
+            case (List.length (model.playMaps)) of
+                0 ->
+                    "You have not selected any maps. Go back to the setup screen and check the relevant boxes."
+
+                _ ->
+                    ""
+    in
+        warning emptyMapsWarn
 
 
 stateView : Team -> Maybe State -> Html Msg
