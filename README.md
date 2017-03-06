@@ -2,7 +2,7 @@
 Simple application for a "picks and bans" system.
 
 ## Development
-This application is written in Elm. There is a compilation step into JS, and then a bundling step; these are both handled with Webpack with `index.js` as the entry point and `index.html` as the shell.
+This application is written in Elm. There is a compilation step into JS, and then a bundling step; these are both handled by Webpack with `src/index.js` as the entry point and `src/index.html` as the shell.
 
 In order to run the project locally:
 
@@ -14,13 +14,13 @@ In order to run the project locally:
 
 Any additions to Elm files under `src/` should be picked up automatically by the loader. You can change the Elm source directory in `elm-package.json`.
 
-The project uses [tachyons](http://tachyons.io) for styling, as it messes well with the reusable views of Elm. Have a look at their guides, it is quite pleasant :)
+The project uses [tachyons](http://tachyons.io) for styling, as it meshes well with the reusable views of Elm. Have a look at their guides, it is quite pleasant :)
 
 ### Customising maps
 You will notice that the map assets are missing. Here is how to add your own:
 - `mkdir images/`
-- Add respective images; they will be copied over to `dist/images/` if they are in `images/`
-- Customise the `initMaps : List Map` in `Model.elm` to match
+- Add respective images; they will be copied over to `dist/images/` during bundling
+- Customise `initMaps : List Map` in `Model.elm` to match your map names, img src
 
 ## Deployment
 Simply run `webpack -p` to bundle and minify the scripts/html/assets into `dist/`.
