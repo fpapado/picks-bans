@@ -1,6 +1,5 @@
 # Next (Debt)
 Factor out svg's, map view?
-Factor out images, views etc.
 Factor out setup / play stuff
 Disambiguate Phase/State/ModeState
 
