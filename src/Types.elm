@@ -22,8 +22,7 @@ type ModeType
 
 
 type alias Map =
-    { id : Int
-    , imgurl : String
+    { imgurl : String
     , title : String
     , status : Maybe Phase
     , inPlay : Bool

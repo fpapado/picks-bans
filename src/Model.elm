@@ -4,11 +4,12 @@ import Msg exposing (Msg)
 import Route
 import Navigation
 import Types exposing (..)
+import Dict exposing (Dict)
 
 
 type alias Model =
-    { allMaps : List Map
-    , playMaps : List Map
+    { allMaps : Dict String Map
+    , playMaps : Dict String Map
     , currentModeState : Maybe State
     , currentMode : Int
     , modes : List Mode
@@ -62,7 +63,7 @@ bo1States =
 
 initModel : Model
 initModel =
-    { playMaps = []
+    { playMaps = Dict.empty
     , allMaps = initMaps
     , teams = initTeams
     , currentModeState = Just initModeState
@@ -86,14 +87,15 @@ initTeams =
     ]
 
 
-initMaps : List Map
+initMaps : Dict String Map
 initMaps =
-    [ { id = 0, imgurl = "images/Cache.png", title = "Cache", status = Nothing, inPlay = False }
-    , { id = 1, imgurl = "images/Cbble.png", title = "Cobblestone", status = Nothing, inPlay = False }
-    , { id = 2, imgurl = "images/Dust_2.png", title = "Dust 2", status = Nothing, inPlay = False }
-    , { id = 3, imgurl = "images/Inferno.png", title = "Inferno", status = Nothing, inPlay = False }
-    , { id = 4, imgurl = "images/Mirage.png", title = "Mirage", status = Nothing, inPlay = False }
-    , { id = 5, imgurl = "images/Nuke.png", title = "Nuke", status = Nothing, inPlay = False }
-    , { id = 6, imgurl = "images/Overpass.png", title = "Overpass", status = Nothing, inPlay = False }
-    , { id = 7, imgurl = "images/Train.png", title = "Train", status = Nothing, inPlay = False }
-    ]
+    Dict.fromList
+        [ ( "Cache", { imgurl = "images/Cache.png", title = "Cache", status = Nothing, inPlay = False } )
+        , ( "Cobblestone", { imgurl = "images/Cbble.png", title = "Cobblestone", status = Nothing, inPlay = False } )
+        , ( "Dust 2", { imgurl = "images/Dust_2.png", title = "Dust 2", status = Nothing, inPlay = False } )
+        , ( "Inferno", { imgurl = "images/Inferno.png", title = "Inferno", status = Nothing, inPlay = False } )
+        , ( "Mirage", { imgurl = "images/Mirage.png", title = "Mirage", status = Nothing, inPlay = False } )
+        , ( "Nuke", { imgurl = "images/Nuke.png", title = "Nuke", status = Nothing, inPlay = False } )
+        , ( "Overpass", { imgurl = "images/Overpass.png", title = "Overpass", status = Nothing, inPlay = False } )
+        , ( "Train", { imgurl = "images/Train.png", title = "Train", status = Nothing, inPlay = False } )
+        ]

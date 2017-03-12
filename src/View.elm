@@ -9,6 +9,7 @@ import Route
 import Svg
 import Svg.Attributes exposing (version, viewBox, width, height, fill, d)
 import Types exposing (..)
+import Dict
 
 
 view : Model -> Html Msg
@@ -100,12 +101,12 @@ mapSelectView : Model -> Html Msg
 mapSelectView model =
     let
         checkBoxItem mp =
-            checkBox (ToggleMapInPlay mp.id) mp.title mp.inPlay
+            checkBox (ToggleMapInPlay mp.title) mp.title mp.inPlay
     in
         div [ class "mb3" ]
             [ h3 [ class "mt4 mt0-ns mb2 f4 navy" ] [ text "Map Select" ]
             , fieldset [] <|
-                List.map checkBoxItem model.allMaps
+                List.map checkBoxItem (Dict.values model.allMaps)
             ]
 
 
@@ -179,8 +180,8 @@ playView model =
             , warningView model
             , stateView currentTeam modeState
             , div [ class "flex flex-wrap" ]
-                (List.map mapView model.playMaps)
-            , picksBansView model.playMaps
+                (List.map mapView (Dict.values model.playMaps))
+            , picksBansView (Dict.values model.playMaps)
             ]
 
 
@@ -228,11 +229,11 @@ warningView model =
                     div [ class "db pa3 f5 bg-red white" ] [ text content ]
 
         emptyMapsWarn =
-            case (List.length (model.playMaps)) of
-                0 ->
+            case (Dict.isEmpty model.playMaps) of
+                True ->
                     "You have not selected any maps. Go back to the setup screen and check the relevant boxes."
 
-                _ ->
+                False ->
                     ""
     in
         warning emptyMapsWarn
@@ -272,7 +273,7 @@ mapView map =
         clickEffect =
             case map.status of
                 Nothing ->
-                    SetMapStatus map.id
+                    SetMapStatus map.title
 
                 _ ->
                     NoOp

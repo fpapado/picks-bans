@@ -7,6 +7,7 @@ import Random.Extra exposing (sample)
 import Route
 import Task
 import Types exposing (..)
+import Dict exposing (Dict)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -36,8 +37,11 @@ update msg model =
 
         SetMapStatus map_id ->
             let
+                changeStatus =
+                    Maybe.map (\mp -> changeMapStatus model.currentModeState mp)
+
                 newPlayMaps =
-                    List.map (changeMapStatus map_id model.currentModeState) model.playMaps
+                    Dict.update map_id changeStatus model.playMaps
 
                 newModel =
                     { model | playMaps = newPlayMaps }
@@ -59,12 +63,12 @@ update msg model =
         SetRandom ->
             let
                 unpickedIDs =
-                    List.filter (\m -> m.status == Nothing) model.playMaps
-                        |> List.map (\m -> m.id)
+                    Dict.filter (\id m -> m.status == Nothing) model.playMaps
+                        |> Dict.keys
 
                 unpickedIDGen =
                     sample unpickedIDs
-                        |> Random.map (Maybe.withDefault 1)
+                        |> Random.map (Maybe.withDefault "")
             in
                 ( model, Random.generate SetMapStatus unpickedIDGen )
 
@@ -94,8 +98,7 @@ update msg model =
         ToggleMapInPlay mapID ->
             let
                 newAllMaps =
-                    model.allMaps
-                        |> List.map (toggleMapInPlay mapID)
+                    model.allMaps |> toggleMapInPlay mapID
             in
                 ( { model | allMaps = newAllMaps }
                     |> syncPlayMapsFromAll
@@ -109,20 +112,19 @@ update msg model =
                     Route.locFor location
             in
                 ( { model | route = newRoute }
-                    |> resetModeState
                     |> syncPlayMapsFromAll
+                    |> resetModeState
                 , Cmd.none
                 )
 
 
-toggleMapInPlay : Int -> Map -> Map
-toggleMapInPlay id mp =
-    case (mp.id == id) of
-        True ->
-            { mp | inPlay = not mp.inPlay }
-
-        False ->
-            mp
+toggleMapInPlay : String -> Dict String Map -> Dict String Map
+toggleMapInPlay id maps =
+    let
+        toggle =
+            Maybe.map (\mp -> { mp | inPlay = not mp.inPlay })
+    in
+        Dict.update id toggle maps
 
 
 changeTeamName : Int -> String -> Team -> Team
@@ -150,16 +152,11 @@ getNextStateCmd nextModeState =
             Cmd.none
 
 
-changeMapStatus : Int -> Maybe State -> Map -> Map
-changeMapStatus map_id maybeState mp =
+changeMapStatus : Maybe State -> Map -> Map
+changeMapStatus maybeState mp =
     case maybeState of
         Just state ->
-            case mp.id == map_id of
-                True ->
-                    { mp | status = Just state.phase }
-
-                False ->
-                    mp
+            { mp | status = Just state.phase }
 
         Nothing ->
             mp
@@ -226,6 +223,6 @@ syncPlayMapsFromAll model =
     let
         newPlayMaps =
             model.allMaps
-                |> List.filter (\mp -> mp.inPlay)
+                |> Dict.filter (\id mp -> mp.inPlay)
     in
         { model | playMaps = newPlayMaps }
